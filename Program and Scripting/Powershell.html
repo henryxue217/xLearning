@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xLearning | Home</title>
-    <link rel="stylesheet" href="../bootstrap-5.3.8-dist/css/bootstrap.css">
+    <link rel="stylesheet" href="../bootstrap-5.3.8-dist/css/bootstrap.css"> 
+    <link rel="stylesheet" href="../normalize.css">
     <link rel="stylesheet" href="../mystyles.css">
 </head>
 
@@ -74,18 +75,18 @@
     <main>
         <div id="myoffcanvas">
         <button id="myoffcanvasButton" class="btn btn-primary position-fixed" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling"
-            aria-controls="offcanvasScrolling">Enable body scrolling</button>
-        
+            aria-controls="offcanvasScrolling">Sub-Menu</button>
+    <!-- Offcanvas with body scrolling -->
         <div class="offcanvas offcanvas-end bg-lightgrey" data-bs-scroll="true" data-bs-backdrop="true" tabindex="-1"
             id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
             <div class="offcanvas-header">
-                <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Offcanvas with body scrolling</h5>
+                <h4 class="offcanvas-title" id="offcanvasScrollingLabel">Power Shell</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
             <div class="offcanvas-body">
                 <ul class="list-unstyled">
-                    <li><a href="#">HTML</a></li>
-                    <li><a href="#">CSS</a></li>
+                    <li><a href="#keep-screen-alive">keep-screen-alive</a></li>
+                    <li><a href="#copy-folder">copy-folder</a></li>
                     <li><a href="#">JavaScript</a></li>
                     <li><a href="#">Python</a></li>
                     <li data-bs-dismiss="offcanvas"><a href="#keep-screen-alive5" >Bash</a></li>
@@ -94,42 +95,104 @@
             </div>
         </div>
         </div>
+    <!-- Main Content powershell-->
         <div class="container limited">
             <div class="row rounded">
                 <div class="col justify-content-center bg-lightgrey rounded">
                     <h2 class="text-center mt-4">PowerShell</h2>
-                    <section class="content-section" id="keep-screen-alive1">
-                        <h5>Keep computer screen alive</h5>
+                    <section class="content-section" id="keep-screen-alive">
+                        <h3>---Keep computer screen alive---</h3>
                         <pre class="bg-dark text-light p-2 rounded">
                         <code language="powershell" >
-                            Write-Host "Screen will not turn off"
-                            $wsh = New-Object -ComObject WScript.Shell
-                            while ($true) {
-                            $wsh.SendKeys("{NUMLOCK}")
-                            Write-Host "Screen will never turn off"
-                            Start-Sleep -Seconds 30
-                            }
+Write-Host "Screen will not turn off"
+$wsh = New-Object -ComObject WScript.Shell
+while ($true) {
+    $wsh.SendKeys("{NUMLOCK}")
+    Write-Host "Screen will never turn off"
+    Start-Sleep -Seconds 30
+}
                         </code>
                         </pre>
                         <p><i>SendKeys("{NUMLOCK}")</i> can be actual number"{1}"</p>
                         <p><i>Start-Sleep -Seconds 30:</i> pauses the script for 30 seconds</p>
                     </section>
-                    <section class="content-section" id="keep-screen-alive">
-                        <h5>Keep computer screen alive</h5>
+                    <!-- copy folder -->
+                    <hr>
+                    <section class="content-section" id="copy-folder">
+                        <h3>---Copy folder and files---</h3>
                         <pre class="bg-dark text-light p-2 rounded">
                                             <code language="powershell" >
-                                                Write-Host "Screen will not turn off"
-                                                $wsh = New-Object -ComObject WScript.Shell
-                                                while ($true) {
-                                                $wsh.SendKeys("{NUMLOCK}")
-                                                Write-Host "Screen will never turn off"
-                                                Start-Sleep -Seconds 30
-                                                }
+####Start####
+###Copy files and folder is not existed or modified with copying process
+function Copy-FolderIfNewer {
+    param (
+    [string]$SourcePath,
+    [string]$DestinationPath
+    )
+
+# Get all items to copy (files and directories)
+$itemsToCopy = Get-ChildItem -Path $SourcePath -Recurse 
+$totalItems = $itemsToCopy.Count
+$copiedItems = 0
+
+Get-ChildItem -Path $SourcePath -Recurse | ForEach-Object {
+    $copiedItems++
+    $progressPercent = ($copiedItems / $totalItems) * 100
+    $status = "Copying '$($_.Name)'..."
+
+Write-Progress -Activity "Copying Items from '$SourcePath' to '$DestinationPath'" `
+    -Status $status `
+    -PercentComplete $progressPercent `
+    -CurrentOperation "Copied $copiedItems of $totalItems items"
+
+
+#remove the SourcePath string from an $_. and then add it to the destinationItemPath
+$destinationItemPath = Join-Path -Path $DestinationPath -ChildPath $_.FullName.Substring($SourcePath.Length)
+
+if ($_.PSIsContainer) {
+    # It's a directory
+    if (-not (Test-Path $destinationItemPath)) {
+        New-Item -ItemType Directory -Path $destinationItemPath | Out-Null
+        Write-Host "Created directory: $destinationItemPath"
+        }
+    } else {
+    # It's a file
+    if (-not (Test-Path $destinationItemPath) -or ($_.LastWriteTime -gt (Get-Item $destinationItemPath).LastWriteTime)) {
+
+        Copy-Item -Path $_.FullName -Destination $destinationItemPath -Force
+        Write-Host "Copied/Updated file: $($_.FullName) to $destinationItemPath"
+        }
+    }
+    }
+
+    Write-Progress -Activity "Copying Items from '$SourcePath' to '$DestinationPath'" `
+    -Status "Copy Complete!" `
+    -PercentComplete 100 `
+    -Completed
+
+}
+
+###############only change here########
+$src = "C:\Source"
+$dst = "D:\Dest"
+#######################################
+
+Copy-FolderIfNewer -SourcePath $src -DestinationPath $dst
+
+#copy one more time to bypass long path
+robocopy $src $dst /E /R:0 /W:0
+
+Write-host "All Done" -ForegroundColor Green
+
+####End####
+
                                             </code>
                                             </pre>
-                        <p><i>SendKeys("{NUMLOCK}")</i> can be actual number"{1}"</p>
-                        <p><i>Start-Sleep -Seconds 30:</i> pauses the script for 30 seconds</p>
+                        <p><i>Copy-FolderIfNewer:</i> the function can show the progress of copying files and folders</p>
+                        <p><i>robocopy: </i>to copy one more time for any error in powershell.</p>
+                        <p>It is okay just robocopy to do the copy</p>
                     </section>
+                    <hr />
                     <section class="content-section" id="keep-screen-alive">
                         <h5>Keep computer screen alive</h5>
                         <pre class="bg-dark text-light p-2 rounded">
